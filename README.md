@@ -38,10 +38,10 @@ AI Agent Memory Hub 把这些内容沉淀到**用户拥有的本地 Obsidian Vau
 ## 工作台预览
 
 <p align="center">
-  <img src="docs/assets/workbench-preview.png" width="480" alt="AI Agent Memory Hub 工作台，展示跨 Agent 任务、受阻项、证据与下一动作">
+  <img src="docs/assets/workbench-preview.png" width="100%" alt="Windows 桌面贴边工作台与网页工作台左右对照，展示跨 Agent 任务、受阻项、证据与下一动作">
 </p>
 
-<p align="center"><sub>由公共发行版在空白测试环境中生成并用真实浏览器截图；页面内容为脱敏示例数据。</sub></p>
+<p align="center"><sub>左：Windows 桌面贴边形态；右：Windows / macOS 网页形态。由公共发行版在空白测试环境中生成，内容为脱敏示例数据。</sub></p>
 
 工作台读取本地生成的 `operations_snapshot.json`，不使用在线演示数据替代用户事实。网页版本支持 Windows 与 macOS；贴边桌面版本使用 WPF + WebView2，仅支持 Windows 10/11。
 
@@ -77,20 +77,9 @@ AI Agent Memory Hub 把这些内容沉淀到**用户拥有的本地 Obsidian Vau
 
 ## 工作原理
 
-```mermaid
-flowchart LR
-    U[用户] --> A[Claude / Codex / WorkBuddy<br/>Gemini / Qoder]
-    A <--> V[(本地 Obsidian Vault)]
-    A --> C[memory-hub close]
-    C --> L[Worklog + 事件 + 回执]
-    L --> S[事实快照]
-    S --> W[网页工作台]
-    S --> D[Windows 桌面工作台]
-    L --> A
-
-    classDef local fill:#e7f6f2,stroke:#159a9c,color:#17324d;
-    class V,L,S local;
-```
+<p align="center">
+  <img src="docs/assets/architecture.svg" width="100%" alt="用户、多个 Agent、本地 Obsidian Vault、收工回执和工作台组成的协作闭环">
+</p>
 
 部署本身也遵循一个明确的权限闸门：
 

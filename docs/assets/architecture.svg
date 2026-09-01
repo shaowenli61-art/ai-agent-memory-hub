@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="430" viewBox="0 0 1200 430" role="img" aria-labelledby="title desc">
+  <title id="title">AI Agent Memory Hub architecture</title>
+  <desc id="desc">User goals flow through multiple AI agents into one local Obsidian fact layer, then produce worklogs, receipts, snapshots and workbenches.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f9fcfd"/>
+      <stop offset="1" stop-color="#eaf6f3"/>
+    </linearGradient>
+    <linearGradient id="hub" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#159a9c"/>
+      <stop offset="1" stop-color="#087c82"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#17324d" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6d8295"/>
+    </marker>
+    <style>
+      .eyebrow { font: 700 13px Arial, sans-serif; letter-spacing: 2px; fill: #159a9c; }
+      .title { font: 700 26px Arial, "Microsoft YaHei", sans-serif; fill: #17324d; }
+      .node-title { font: 700 18px Arial, "Microsoft YaHei", sans-serif; fill: #17324d; }
+      .node-copy { font: 14px Arial, "Microsoft YaHei", sans-serif; fill: #607489; }
+      .hub-title { font: 700 20px Arial, "Microsoft YaHei", sans-serif; fill: #ffffff; }
+      .hub-copy { font: 14px Arial, "Microsoft YaHei", sans-serif; fill: #d9ffff; }
+      .flow { fill: none; stroke: #6d8295; stroke-width: 2.5; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="1198" height="428" rx="30" fill="url(#bg)" stroke="#d9e8eb"/>
+  <text x="48" y="54" class="eyebrow">ONE LOCAL FACT LAYER</text>
+  <text x="48" y="88" class="title">从用户目标到可追溯的多 Agent 协作闭环</text>
+
+  <g filter="url(#shadow)">
+    <rect x="48" y="140" width="176" height="132" rx="22" fill="#ffffff" stroke="#dce8ec"/>
+    <circle cx="82" cy="176" r="15" fill="#e8f7f3" stroke="#159a9c"/>
+    <path d="M76 177l4 4 8-10" fill="none" stroke="#159a9c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="108" y="181" class="node-title">用户</text>
+    <text x="72" y="220" class="node-copy">目标与关键判断</text>
+    <text x="72" y="245" class="node-copy">授权与验收边界</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="270" y="140" width="210" height="132" rx="22" fill="#ffffff" stroke="#dce8ec"/>
+    <text x="296" y="180" class="node-title">多 Agent 入口</text>
+    <text x="296" y="216" class="node-copy">Claude · Codex</text>
+    <text x="296" y="241" class="node-copy">WorkBuddy · Gemini · Qoder</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="526" y="120" width="218" height="172" rx="26" fill="url(#hub)"/>
+    <text x="552" y="163" class="eyebrow" style="fill:#bff7ee">LOCAL MEMORY HUB</text>
+    <text x="552" y="202" class="hub-title">Obsidian Vault</text>
+    <text x="552" y="236" class="hub-copy">项目事实 · 决策 · 证据</text>
+    <text x="552" y="262" class="hub-copy">当前任务 · 下一动作</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="790" y="140" width="174" height="132" rx="22" fill="#ffffff" stroke="#dce8ec"/>
+    <text x="816" y="180" class="node-title">收工闭环</text>
+    <text x="816" y="216" class="node-copy">Worklog · 事件</text>
+    <text x="816" y="241" class="node-copy">回执 · 事实快照</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1010" y="140" width="142" height="132" rx="22" fill="#ffffff" stroke="#dce8ec"/>
+    <text x="1036" y="180" class="node-title">工作台</text>
+    <text x="1036" y="216" class="node-copy">开放任务</text>
+    <text x="1036" y="241" class="node-copy">受阻与下一步</text>
+  </g>
+
+  <path d="M224 206 H258" class="flow"/>
+  <path d="M480 206 H514" class="flow"/>
+  <path d="M744 206 H778" class="flow"/>
+  <path d="M964 206 H998" class="flow"/>
+
+  <path d="M877 286 C877 360 375 360 375 286" fill="none" stroke="#159a9c" stroke-width="2.5" stroke-dasharray="7 7" marker-end="url(#arrow)"/>
+  <text x="504" y="398" class="node-copy">下一次 Agent 启动时，从本地事实层恢复上下文并继续工作</text>
+</svg>

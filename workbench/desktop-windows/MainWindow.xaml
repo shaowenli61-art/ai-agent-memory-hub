@@ -1,0 +1,20 @@
+<Window x:Class="MemoryHubDesktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="AI 记忆中枢桌面工作台"
+        Width="420"
+        Height="920"
+        MinWidth="380"
+        MinHeight="720"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Loaded="Window_Loaded"
+        SourceInitialized="Window_SourceInitialized">
+  <Grid Background="#01FFFFFF">
+    <wv2:WebView2 x:Name="WorkbenchView" />
+  </Grid>
+</Window>

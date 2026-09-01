@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-agent-memory-hub"
+version = "0.1.0"
+description = "An agent-deployable, local-first AI memory hub for Obsidian"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "shaowenli61-art" }]
+dependencies = []
+
+[project.scripts]
+memory-hub = "memory_hub.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["memory_hub*"]

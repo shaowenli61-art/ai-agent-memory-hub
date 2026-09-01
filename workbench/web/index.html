@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI 记忆中枢高保真桌面任务工作台">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <title>AI 记忆中枢 · 当前任务轨道</title>
+</head>
+<body>
+  <main class="workbench" aria-label="AI 记忆中枢当前任务工作台">
+    <div class="atmosphere" aria-hidden="true"></div>
+
+    <header class="topline">
+      <div class="identity">
+        <span class="identity-mark">M</span>
+        <span class="identity-copy">
+          <strong>工作脉搏</strong>
+          <small>MEMORY HUB / LIVE TASK RAIL</small>
+        </span>
+      </div>
+      <div class="window-actions" aria-label="桌面工作台控制">
+        <button class="icon-button drag-handle" type="button" aria-label="拖动工作台" title="拖动工作台">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14M5 15h14"/></svg>
+        </button>
+        <button class="icon-button" id="dockButton" type="button" aria-label="重新贴紧右侧" title="重新贴紧右侧">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 4v16M5 7h9v10H5z"/></svg>
+        </button>
+        <button class="icon-button" id="refreshButton" type="button" aria-label="刷新事实快照" title="刷新事实快照">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5M4 18v-5h5M18.3 9A7 7 0 0 0 6.7 6.7L4 9m16 6-2.7 2.3A7 7 0 0 1 5.7 15"/></svg>
+        </button>
+        <button class="icon-button" id="closeButton" type="button" aria-label="关闭桌面工作台" title="关闭桌面工作台">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="sync-strip" aria-label="数据同步状态">
+      <span class="live-indicator"><i></i><b id="syncStatus">正在读取事实层</b></span>
+      <time id="syncTime">--:--</time>
+    </section>
+
+    <section class="hero" aria-labelledby="primaryTaskTitle">
+      <div class="hero-index">
+        <span>NOW</span>
+        <b id="activeCount">0</b>
+        <small>条推进主线</small>
+      </div>
+      <div class="hero-copy">
+        <p class="section-kicker"><span></span>当前主线</p>
+        <h1 id="primaryTaskTitle">正在建立任务轨道</h1>
+        <p id="primaryTaskMeta">等待本地事实快照加载</p>
+      </div>
+      <div class="phase-line" aria-label="当前任务阶段">
+        <span class="done"><i></i>已登记</span>
+        <span class="current"><i></i>执行中</span>
+        <span><i></i>待验收</span>
+      </div>
+    </section>
+
+    <section class="flow" aria-labelledby="flowTitle">
+      <header class="section-heading">
+        <div><p>LIVE FLOW</p><h2 id="flowTitle">具体任务进展</h2></div>
+        <span id="flowCount">0 项</span>
+      </header>
+      <div class="task-rail" id="taskRail" aria-live="polite"></div>
+    </section>
+
+    <section class="blocked-zone" id="blockedZone" aria-labelledby="blockedTitle" hidden>
+      <div class="blocked-signal"><span></span><b>BLOCKED</b></div>
+      <button class="blocked-content" id="blockedTask" type="button">
+        <span><small id="blockedTitle">受阻任务</small><strong id="blockedTaskTitle"></strong></span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </section>
+
+    <section class="next-field" aria-labelledby="nextActionTitle">
+      <div class="next-orbit" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="next-copy">
+        <p>NEXT / 下一动作</p>
+        <h2 id="nextActionTitle">等待建议生成</h2>
+        <span id="nextActionBasis">只展示有事实依据的下一步</span>
+      </div>
+      <span class="next-priority" id="nextPriority">P0</span>
+    </section>
+
+    <footer class="bottom-dock">
+      <div class="source-state">
+        <span class="source-glyph"><i></i></span>
+        <span><strong>本地事实层</strong><small id="sourceCaption">operations_snapshot.json</small></span>
+      </div>
+    </footer>
+  </main>
+
+  <div class="detail-layer" id="detailLayer" aria-hidden="true">
+    <button class="detail-backdrop" id="detailBackdrop" type="button" aria-label="关闭任务详情"></button>
+    <aside class="detail-sheet" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <header><span id="detailStatus">任务状态</span><button id="detailClose" type="button" aria-label="关闭任务详情"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button></header>
+      <p class="detail-kicker">TASK EVIDENCE</p>
+      <h2 id="detailTitle">任务详情</h2>
+      <dl>
+        <div><dt>执行主体</dt><dd id="detailAgent">—</dd></div>
+        <div><dt>协作关系</dt><dd id="detailCollaborator">—</dd></div>
+        <div><dt>当前证据</dt><dd id="detailEvidence">—</dd></div>
+        <div><dt>来源时间</dt><dd id="detailUpdatedAt">—</dd></div>
+      </dl>
+      <button class="open-evidence" id="openEvidenceButton" type="button" disabled>
+        <span>在 Obsidian 中打开证据</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+      </button>
+    </aside>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

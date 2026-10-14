@@ -209,3 +209,7 @@ Issues are welcome for additional agent rule locations, real-world macOS accepta
 ## License
 
 [MIT License](LICENSE)—you may use, copy, modify, and redistribute the project as long as the copyright and license notices are preserved. The software is provided as-is, without warranty.
+
+## Continuous Workbench Update
+
+Evidence-backed project summaries, continuation packets, automatic next-step suggestions, human delivery reviews, pause/archive/restore, and natural-language knowledge retrieval are now available as reusable source. See [continuous workbench](docs/continuous-workbench.md) for the runnable synthetic trial and current deployment boundary. No private Vault, runtime configuration, index, or model weights are included.

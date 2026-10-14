@@ -25,3 +25,11 @@ obj/
 workbench/desktop-windows/publish/
 output/
 .playwright-cli/
+
+# User-specific workbench state
+demo-data/
+local-data/
+config/operations_dashboard.json
+workbench/web/data/*.json
+*.sqlite*
+*.onnx

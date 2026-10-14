@@ -896,6 +896,8 @@ def receipt_ids(value: str) -> list[str]:
 
 
 def load_decision_resolutions(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
     rows = table_with_columns(
         read_text(path),
         ("决策键", "状态", "已关闭回执", "闭环回执"),
@@ -1163,6 +1165,8 @@ def load_emerging_projects(
 
 
 def load_capabilities(path: Path) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+    if not path.exists():
+        return [], []
     text = read_text(path)
     capability_rows = table_with_columns(text, ("能力域", "成熟度", "判断"))
     gap_rows = table_with_columns(text, ("优先级", "空白能力", "为什么重要"))
@@ -1568,12 +1572,10 @@ def build_snapshot(config: dict[str, Any], now: datetime | None = None) -> dict[
     )
     activity_paths = sorted((memory_hub_root / "10-Daily").glob("20??-??-??-ai-activity.md"))
     latest_activity_path = activity_paths[-1] if activity_paths else None
-    sources = [
-        source_state("当前任务", current_tasks_file, now, int(config["stale_source_days"])),
-        source_state("项目索引", project_index_file, now, int(config["stale_source_days"])),
-        source_state("能力地图", capability_map_file, now, int(config["stale_source_days"])),
-        source_state("决策闭环台账", decision_resolution_file, now, int(config["stale_source_days"])),
-    ]
+    sources = [source_state(label, path, now, int(config['stale_source_days']))
+        for label, path in [('当前任务',current_tasks_file),('项目索引',project_index_file),
+                            ('能力地图',capability_map_file),('决策闭环台账',decision_resolution_file)]
+        if path.exists()]
     if latest_worklog_path:
         sources.append(source_state("最近正式工作日志", latest_worklog_path, now, int(config["stale_source_days"])))
     if latest_activity_path:

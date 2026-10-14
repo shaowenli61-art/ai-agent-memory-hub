@@ -260,6 +260,9 @@ def apply_install_plan(plan: dict, *, package_root: Path, confirmed: bool) -> di
         shutil.copytree(web_source, web_install, dirs_exist_ok=True)
         data_dir = web_install / "data"
         data_dir.mkdir(parents=True, exist_ok=True)
+        if (package_root / 'scripts/build_operations_dashboard.py').exists():
+            from memory_hub.workbench import configure
+            configure(vault,package_root=package_root)
         write_snapshot(vault)
         web_workbench = str(web_install)
     return {
@@ -277,6 +280,8 @@ def apply_install_plan(plan: dict, *, package_root: Path, confirmed: bool) -> di
 def verify_install(vault: Path) -> dict:
     root = vault.expanduser().resolve()
     receipt_path = root / ".memory-hub" / "install-receipt.json"
+    if not receipt_path.exists() and (root/'.memory-hub/workbench-install.json').exists():
+        receipt_path = root/'.memory-hub/workbench-install.json'
     problems: list[str] = []
     missing_rule_blocks: list[str] = []
     if not (root / "README.md").exists():

@@ -25,7 +25,7 @@ except ImportError:
     import knowledge_evidence as evidence
 
 SOURCES = {'formal': ('正式记忆', 'memory_hub_root'), 'job': ('岗位知识与历史', 'job_vault_root'), 'personal': ('个人知识', 'personal_vault_root')}
-EXCLUDED = {'.git', '.obsidian', '.trash', 'node_modules', '__pycache__', '90-Logs', 'write-snapshots', '.venv'}
+EXCLUDED = {'.git', '.obsidian', '.memory-hub', '.trash', 'node_modules', '__pycache__', '90-Logs', 'write-snapshots', '.venv'}
 STOP = ('请帮我', '帮我', '我想', '需要了解', '有没有', '为什么', '怎么样', '如何', '什么', '有哪些', '中的', '的', '了', '这个', '一个', '进行', '关于', '以及', '时候', '需要', '之前', '相关')
 
 def concepts(query):

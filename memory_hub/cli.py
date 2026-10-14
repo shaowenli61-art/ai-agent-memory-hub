@@ -42,10 +42,34 @@ def build_parser() -> argparse.ArgumentParser:
     close.add_argument("--evidence", action="append", default=[])
     close.add_argument("--agent", default="")
     close.add_argument("--collaborator", default="")
+    close.add_argument('--project',default='',help='registered project name for a verified project receipt')
+    close.add_argument('--remaining',default='未登记')
+    close.add_argument('--risks',default='无')
+    close.add_argument('--avoid-repeat',default='无')
+    close.add_argument('--verification',default='',help='actual checks and results, never inferred from completion')
     verify = commands.add_parser("verify", help="verify a deployed memory hub")
     verify.add_argument("--vault", type=Path, required=True)
     snapshot = commands.add_parser("snapshot", help="rebuild the workbench snapshot")
     snapshot.add_argument("--vault", type=Path, required=True)
+    setup=commands.add_parser('setup',help='configure real local sources without changing Agent rules')
+    setup.add_argument('--vault',type=Path,required=True)
+    for flag in ('job','personal','semantic-model','semantic-onnx','reranker'):
+        setup.add_argument('--'+flag,type=Path)
+    setup.add_argument('--owner')
+    project=commands.add_parser('project',help='register an existing project directory without moving files')
+    project.add_argument('--vault',type=Path,required=True)
+    project.add_argument('--name',required=True)
+    project.add_argument('--path',type=Path,required=True)
+    project.add_argument('--goal',default='')
+    project.add_argument('--next-action',default='先核对项目当前成果、阻塞与证据。')
+    serve=commands.add_parser('serve',help='start the complete operating workbench on loopback')
+    serve.add_argument('--vault',type=Path,required=True)
+    serve.add_argument('--port',type=int,default=8896)
+    serve.add_argument('--no-browser',action='store_true')
+    stop=commands.add_parser('stop',help='stop only the recorded local workbench instance')
+    stop.add_argument('--vault',type=Path,required=True)
+    check=commands.add_parser('workbench-doctor',help='check FTS5 and configured sources without changing them')
+    check.add_argument('--vault',type=Path)
     return parser
 
 
@@ -98,6 +122,7 @@ def main(argv: list[str] | None = None) -> int:
             evidence=args.evidence,
             agent=args.agent,
             collaborator=args.collaborator,
+            project=args.project,remaining=args.remaining,risks=args.risks,avoid_repeat=args.avoid_repeat,verification=args.verification,
         )
         print(json.dumps(receipt, ensure_ascii=False, indent=2))
         return 0
@@ -109,6 +134,29 @@ def main(argv: list[str] | None = None) -> int:
         path = write_snapshot(args.vault.resolve())
         print(path)
         return 0
+    if args.command=='setup':
+        from memory_hub.workbench import configure,doctor,refresh_snapshot
+        configure(args.vault,job=args.job,personal=args.personal,owner=args.owner,semantic_model=args.semantic_model,semantic_onnx=args.semantic_onnx,reranker=args.reranker)
+        refresh_snapshot(args.vault)
+        print(json.dumps(doctor(args.vault),ensure_ascii=False,indent=2))
+        return 0
+    if args.command=='project':
+        from memory_hub.workbench import register_project
+        print(json.dumps(register_project(args.vault,args.name,args.path,args.goal,args.next_action),ensure_ascii=False,indent=2))
+        return 0
+    if args.command=='serve':
+        from memory_hub.local_server import serve
+        serve(args.vault,args.port,not args.no_browser)
+        return 0
+    if args.command=='stop':
+        from memory_hub.local_server import stop
+        print(json.dumps(stop(args.vault),ensure_ascii=False,indent=2))
+        return 0
+    if args.command=='workbench-doctor':
+        from memory_hub.workbench import doctor
+        report=doctor(args.vault)
+        print(json.dumps(report,ensure_ascii=False,indent=2))
+        return 0 if report['ok'] else 1
     return 2
 
 

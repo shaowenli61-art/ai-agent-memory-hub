@@ -76,10 +76,10 @@ python -m memory_hub verify --vault "/absolute/path/to/vault"
 不能直接双击依赖 `fetch()` 的页面；从该目录启动本地 HTTP 服务，例如：
 
 ```bash
-python -m http.server 8765 --directory "/absolute/path/to/vault/.memory-hub/workbench/web"
+python -m memory_hub serve --vault "/absolute/path/to/vault"
 ```
 
-然后打开 `http://127.0.0.1:8765/`。服务只需绑定本机，不要暴露到局域网或公网。
+然后打开 `http://127.0.0.1:8896/full/index.html`。服务只绑定本机；静态 HTTP 服务不能执行反馈和归档。上述 serve 命令从代码仓库根目录运行。普通启动不修改全局规则。首次配置与升级见 [正式本地部署](local-workbench.md)。
 
 Windows 桌面端在仓库根目录执行：
 
@@ -106,6 +106,8 @@ python -m memory_hub close \
 状态可选：`active`、`completed`、`stage-complete`、`waiting`、`blocked`、`handoff`、`terminated`。不要把“等待确认”写成“已完成”。该命令会追加事件、更新当天 worklog、生成回执，并刷新网页/桌面工作台读取的快照。
 
 ## 7. 验收回执
+
+新版可信摘要需要先登记真实项目，再在 close 命令增加 `--project "项目名称"` 与真实 `--remaining`。缺少项目归属的旧任务不会被猜测合并，任务完成不会结束项目。
 
 交付时必须报告：
 

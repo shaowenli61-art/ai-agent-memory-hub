@@ -5,7 +5,7 @@ description: 从个人工作台接续项目，核对本人当前目标、采用�
 
 # 接续与交付
 
-工作台代码根目录是本 Skill 所在目录的上两级；体验包同样适用。配置为 `config/operations_dashboard.json`。
+工作台代码根目录是本 Skill 所在目录的上两级。正式配置为使用者记忆库的 `.memory-hub/workbench-config.json`；虚构体验才使用 `config/operations_dashboard.json`。所有命令显式加 `--config "当前记忆库/.memory-hub/workbench-config.json"`，不能凭历史路径选库。
 
 1. 用 `python scripts/work_cycle.py --packet --project-path "项目完整路径"` 读取最新接续包。默认配置不适用时加 `--config`。返回 `state` 是本人当前项目决定；`paused`、`ended` 时不继续执行，只有本人恢复才能推进。不能仅凭旧项目页的“活跃”判断。
 2. 先判断当前证据建议是否适合本次任务，主动读取最新成果、反馈、阻塞和边界，给出有依据且可验证的下一步。不要要求用户重复填写已有目标、计划或完成标准；用户负责判断与调整。本人已经调整的下一步优先，发现冲突时说明新证据。采用版本按用途确认；哈希失效的版本必须重新核对。

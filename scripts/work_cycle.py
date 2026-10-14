@@ -163,12 +163,13 @@ def file_is_current(file):
 def compose_packet(project, cycle, config):
     brief = project.get('current_brief', {})
     plan = cycle.get('plan')
+    config_file=config.get('_config_path') or 'config/operations_dashboard.json'
     lines = [f"# 本次工作：{project.get('project') or brief.get('project')}",
         f"项目目录：{project.get('path', '')}", f"当前项目决定：{project.get('lifecycle', {}).get('state', '未确认')}",
         '先读取当前决定；暂停或结束须本人恢复。这里的目标与资料不扩大执行、发布或费用授权。',
         '接续 Agent 主动核对真实进展、成果反馈与阻塞，判断当前建议是否合适；需要调整时说明依据，不要求本人重复填写已有目标或计划。',
         f"接续工作规则：{Path(__file__).resolve().parents[1] / 'skills/continuous-workbench/SKILL.md'}",
-        f"统一接续入口：python scripts/work_cycle.py --config config/operations_dashboard.json --packet --project-key {project_key(project)}",
+        f'统一接续入口：python scripts/work_cycle.py --config "{config_file}" --packet --project-key {project_key(project)}',
         f"入口所在工作台：{Path(__file__).resolve().parents[1]}",
         f"当前工作记录版本：{cycle['revision'] or '尚未登记'}"]
     if plan:
@@ -513,6 +514,7 @@ def main():
     args=parser.parse_args()
     try:
         config=json.loads(Path(args.config).read_text(encoding='utf-8-sig'))
+        config['_config_path']=str(Path(args.config).resolve())
         if args.packet:
             # Rebuild from current formal sources; never resume from an expired exported snapshot.
             try:

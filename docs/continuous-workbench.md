@@ -2,7 +2,7 @@
 
 The public core now includes evidence-backed project briefs, continuation packets, automatic next-step suggestions, versioned deliveries and human feedback, reversible pause/archive/restore, and natural-language knowledge retrieval.
 
-当前同步包含可信摘要、接续、自动建议、成果与反馈、归档恢复及自然语言检索的通用源码与临时虚构库回归。原 Windows 桌面观察器仍使用原任务快照；新增操作首先提供在完整网页工作台。真实部署接入将在后续安装交付中连接公开版记忆流程。
+当前包含可信摘要、接续、自动建议、成果与反馈、归档恢复及自然语言检索。真实部署接入已连接公开版记忆流程，详见 [正式本地部署](local-workbench.md)。原 Windows 桌面观察器保持原有边界；新增操作的完整验收对象是网页工作台。
 
 Independent synthetic trial: `python scripts/demo_server.py --port 8897`, then open http://127.0.0.1:8897/full/index.html . This trial creates only demo-data and does not connect private Vaults. It is not yet the real-data deployment entry.
 

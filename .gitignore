@@ -33,3 +33,5 @@ config/operations_dashboard.json
 workbench/web/data/*.json
 *.sqlite*
 *.onnx
+local-settings.json
+personal-vault/

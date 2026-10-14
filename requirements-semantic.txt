@@ -1,0 +1,5 @@
+# Optional, installed only when the user chooses local ONNX semantic retrieval.
+numpy
+onnxruntime
+tokenizers
+jieba

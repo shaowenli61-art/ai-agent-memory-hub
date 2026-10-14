@@ -212,4 +212,6 @@ Issues are welcome for additional agent rule locations, real-world macOS accepta
 
 ## Continuous Workbench Update
 
-Evidence-backed project summaries, continuation packets, automatic next-step suggestions, human delivery reviews, pause/archive/restore, and natural-language knowledge retrieval are now available as reusable source. See [continuous workbench](docs/continuous-workbench.md) for the runnable synthetic trial and current deployment boundary. No private Vault, runtime configuration, index, or model weights are included.
+Run `python launch.py` or double-click **Start Workbench.cmd** on Windows. Choose real work, select your own Vault and optional knowledge folders, and keep those settings on later starts. Register projects, continue with evidence-backed summaries, search original notes, review deliveries, and pause/archive/restore. See the complete [local deployment and upgrade guide](docs/local-workbench.md). Python 3.11+ with SQLite FTS5 is required; the source package does not bundle Python or models.
+
+The independent synthetic trial remains available without connecting real data. User data, launch settings, indexes and model weights are excluded from Git and source packages. New operations are accepted in the browser workbench; the existing Windows desktop observer retains its previous boundary. Current UI is Chinese. Optional local semantic models require explicit configuration and dependencies; base retrieval is lexical.

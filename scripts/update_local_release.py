@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path, PurePosixPath
 
 SOURCE_DIRS={'memory_hub','scripts','skills','protocols','workbench','docs','tests'}
-ROOT_FILES={'README.md','README.zh-CN.md','AGENTS.md','LICENSE','SECURITY.md','.gitignore','pyproject.toml','requirements-semantic.txt','launch.py','stop.py','Start Workbench.cmd','Stop Workbench.cmd','Start Workbench.command'}
+ROOT_FILES={'README.md','README.zh-CN.md','INSTALL.md','AGENTS.md','LICENSE','SECURITY.md','.gitignore','pyproject.toml','requirements-semantic.txt','launch.py','stop.py','Start Workbench.cmd','Stop Workbench.cmd','Start Workbench.command'}
 EXCLUDE={'__pycache__','bin','obj','publish','data','.git','.memory-hub','output','demo-data','local-data','personal-vault'}
 SUFFIXES={'.py','.md','.js','.css','.html','.cs','.xaml','.csproj','.manifest','.json','.svg','.png','.ps1','.txt','.toml','.cmd','.command'}
 

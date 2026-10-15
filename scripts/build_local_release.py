@@ -22,7 +22,10 @@ def build(output,root=None):
         if not allowed(name):continue
         destination=output/name;destination.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(path,destination)
         rows.append(dict(path=name,sha256=hashlib.sha256(destination.read_bytes()).hexdigest()))
-    manifest=dict(version='0.2.0',kind='real-local-source-deployment',python='3.11+',includes_private_data=False,files=rows)
+    import tomllib
+    project=root/'pyproject.toml'
+    version=tomllib.loads(project.read_text(encoding='utf-8'))['project']['version'] if project.exists() else '0.2.1'
+    manifest=dict(version=version,kind='real-local-source-deployment',python='3.11+',includes_private_data=False,files=rows)
     (output/'release-files.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
     verify_package(output)
     archive=shutil.make_archive(str(output),'zip',output)

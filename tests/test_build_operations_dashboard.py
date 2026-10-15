@@ -523,8 +523,8 @@ tasks_excluded_from_current_scope: 1
 
 
     def test_owner_alias_does_not_match_parenthetical_reminder(self) -> None:
-        self.assertTrue(dashboard.owner_mentions_alias("体验用户 / 侯欢欢", "体验用户"))
-        self.assertFalse(dashboard.owner_mentions_alias("侯欢欢（体验用户提醒）", "体验用户"))
+        self.assertTrue(dashboard.owner_mentions_alias("体验用户 / 示例同事", "体验用户"))
+        self.assertFalse(dashboard.owner_mentions_alias("示例同事（体验用户提醒）", "体验用户"))
 
 
 

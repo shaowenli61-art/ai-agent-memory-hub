@@ -77,6 +77,9 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "doctor":
         report = inspect_environment(home=args.home, system=args.system)
+        from memory_hub.preflight import inspect_startup
+        report['startup']=inspect_startup()
+        report['ok']=report['startup']['ok']
         if args.as_json:
             print(json.dumps(report, ensure_ascii=False, indent=2))
         else:
@@ -87,7 +90,8 @@ def main(argv: list[str] | None = None) -> int:
             for name, state in report["prerequisites"].items():
                 label = "found" if state["installed"] else "not found"
                 print(f"- {name}: {label}")
-        return 0
+            for problem in report['startup']['problems']:print('- '+problem)
+        return 0 if report['ok'] else 1
     if args.command == "plan":
         environment = inspect_environment(home=args.home, system=args.system)
         plan = build_install_plan(
@@ -153,8 +157,8 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(stop(args.vault),ensure_ascii=False,indent=2))
         return 0
     if args.command=='workbench-doctor':
-        from memory_hub.workbench import doctor
-        report=doctor(args.vault)
+        from memory_hub.preflight import inspect_startup
+        report=inspect_startup(args.vault)
         print(json.dumps(report,ensure_ascii=False,indent=2))
         return 0 if report['ok'] else 1
     return 2

@@ -221,6 +221,9 @@ def _render_rule_block(vault: Path, package_root: Path, protocol: str | None) ->
 def apply_install_plan(plan: dict, *, package_root: Path, confirmed: bool) -> dict:
     if not confirmed:
         raise PermissionError("install plan must be confirmed before changes are applied")
+    if (package_root/'release-files.json').exists():
+        from scripts.update_local_release import verify_package
+        verify_package(package_root)
     vault = Path(plan["vault"])
     _initialize_vault(vault)
     protocol_path = package_root / "protocols" / "growth-ai-collaboration-v3.2.1.md"

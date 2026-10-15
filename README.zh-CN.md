@@ -4,6 +4,10 @@
 
 # AI Agent Memory Hub
 
+**本地部署：** 下载或克隆项目后，让你现有的Agent完整读取 [INSTALL.md](INSTALL.md)。先只读检查源码包与两种启动入口，再按你的选择启动体验或接入真实资料；普通网页使用不必先安装全局规则、Obsidian、桌面依赖或模型。
+
+[下载 v0.2.1 完整部署包](https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/download/v0.2.1/AI-Personal-Workbench-v0.2.1.zip) · [下载虚拟数据交互 HTML](https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/download/v0.2.1/AI-Personal-Workbench-Demo-v0.2.1.html)。HTML仅用虚构资料模拟交互，不访问本机文件或执行Agent，具体见[体验页功能与边界](docs/standalone-preview.md)。
+
 ### 把项目事实、决策、证据和下一步留在本地，让不同 AI Agent 真正接续工作
 
 **A local-first, agent-deployable memory and collaboration layer for your AI coding tools.**

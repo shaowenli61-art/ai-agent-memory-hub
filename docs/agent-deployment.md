@@ -1,6 +1,8 @@
 # Agent 驱动部署说明
 
-本文的执行者是用户本地已有的 Claude Code、Codex、WorkBuddy、Gemini、Qoder 等 Agent。目标不是无条件自动安装，而是在一台可视为“空白环境”的 Windows 或 macOS 电脑上，先查清事实，再和用户逐项确认，最后完成可验证部署。
+普通用户先从 [本地部署入口](../INSTALL.md) 开始：Agent只读体检后，按本人选择启动体验或真实网页工作台，无须先改全局规则、选成长协议或装桌面程序。
+
+以下是可选的Agent共享规则安装流程，只有用户要求该能力才使用。执行者为用户本地已有的Agent，应核实环境、展示具体修改计划后完成可验证部署。
 
 ## 0. 不可越过的边界
 
@@ -15,7 +17,8 @@
 在仓库根目录执行：
 
 ```bash
-python -m memory_hub doctor --json
+python -B -m memory_hub doctor --json
+python -B launch.py --check
 ```
 
 随后补查当前版本尚不能自动确认的项目：
@@ -30,7 +33,7 @@ python -m memory_hub doctor --json
 
 ## 2. 只问会改变部署路线的问题
 
-必须和用户确认以下四项：
+仅在本节高级部署中确认以下四项；已有明确选择直接沿用，不重复询问：
 
 1. **Vault**：使用哪个已有 Obsidian Vault，还是创建一个新的空 Vault；记录绝对路径。
 2. **规则作用域**：写入全局规则，还是只写某个项目；全局规则影响面更大。

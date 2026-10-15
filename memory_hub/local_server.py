@@ -95,15 +95,16 @@ def make_server(vault, port=8896):
         source=str(PACKAGE_ROOT),configuration=str(vault/'.memory-hub/workbench-config.json')),ensure_ascii=False,indent=2),encoding='utf-8')
     return server
 
-def serve(vault,port=8896,open_browser=True):
+def serve(vault,port=8896,open_browser=True,on_started=None):
     server=make_server(vault,port)
     descriptor=Path(vault)/'.memory-hub/server.json'
     descriptor.write_text(json.dumps(server.workbench_state),encoding='utf-8')
-    url=f'http://127.0.0.1:{port}/full/index.html'
-    print('个人工作台：'+url,flush=True)
-    if open_browser:
-        webbrowser.open(url)
     try:
+        if on_started:on_started()
+        url=f'http://127.0.0.1:{port}/full/index.html'
+        print('个人工作台：'+url,flush=True)
+        if open_browser:
+            webbrowser.open(url)
         server.serve_forever()
     finally:
         server.server_close()

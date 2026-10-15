@@ -4,6 +4,10 @@
 
 # AI Agent Memory Hub
 
+**Local deployment:** download or clone the project, then ask your existing Agent to read [INSTALL.md](INSTALL.md). It checks the package and both startup paths before configuring the trial or real workspace. Ordinary web use does not require global Agent rules, Obsidian, desktop dependencies or a model.
+
+[Download v0.2.1 deployment ZIP](https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/download/v0.2.1/AI-Personal-Workbench-v0.2.1.zip) · [Synthetic interactive HTML](https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/download/v0.2.1/AI-Personal-Workbench-Demo-v0.2.1.html). The HTML uses invented data and browser-only simulation; it does not access your files or execute an Agent. See [preview boundaries](docs/standalone-preview.md).
+
 ### Keep project facts, decisions, evidence, and next actions local—so every AI agent can continue where the last one stopped
 
 **A local-first, agent-deployable memory and collaboration layer for your AI coding tools.**

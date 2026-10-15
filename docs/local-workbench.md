@@ -1,5 +1,7 @@
 # 正式本地工作台部署 / Local Workbench
 
+首次使用可直接让Agent读取根目录 [INSTALL.md](../INSTALL.md)。先执行 `python -B launch.py --check` 只读体检，再按用户选择启动体验或真实模式，无须先安装全局规则。启动器支持 `--mode demo|real`、`--vault`、`--job`、`--personal`、`--port` 和 `--no-browser`。
+
 这是连接使用者自己的项目与知识库的源码部署包。需要 Python 3.11+（SQLite 含 FTS5）和浏览器；不附带 Python 解释器或模型权重，无需 API Key。Obsidian 推荐但不是网页运行的硬依赖。
 
 ## 首次使用与日常启动

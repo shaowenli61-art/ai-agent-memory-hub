@@ -66,7 +66,7 @@ PORTFOLIO_DOMAINS = {
     "AI 系统与 Agent": (
         "AI助手记忆中枢",
         "思维助手",
-        "AIRI岗位数字人",
+        "岗位数字助理",
         "数字人智能体",
         "工程师",
         "项目招投标分析工具",
@@ -1304,7 +1304,7 @@ def recommendation_rules(snapshot: dict[str, Any]) -> list[dict[str, str]]:
             {
                 "priority": "P0",
                 "type": "证据驱动",
-                "recommendation": "把 WeKnora 从活动信号升级为可验收项目，而不是只算一次部署。",
+                "recommendation": "把近期新工作从活动信号升级为可验收项目，明确目标和验收标准。",
                 "basis": f"识别到 {metrics['emerging_projects']} 个近期真实工作目录和文件变化，但尚未进入项目索引。",
                 "next_action": "先定义目标用户、首个使用场景、最小验收问题集和下一里程碑，再决定正式立项。",
                 "stop_condition": "新工作已登记为项目，或明确记录为一次性试验并关闭。",

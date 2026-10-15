@@ -6,18 +6,20 @@ All records stay under ./demo-data; no real vault is connected.
 import argparse
 import json
 import os
+import sys
 import secrets
 import threading
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
-from build_operations_dashboard import build_snapshot
-from project_lifecycle import change_state
-from work_cycle import command
-from knowledge_search import refresh
-
 ROOT=Path(__file__).resolve().parents[1]
+if not __package__:
+    sys.path.insert(0,str(ROOT))
+from scripts.build_operations_dashboard import build_snapshot
+from scripts.project_lifecycle import change_state
+from scripts.work_cycle import command
+from scripts.knowledge_search import refresh
 
 def initialize():
     data=ROOT/'demo-data';formal=data/'formal';job=data/'job';personal=data/'personal'
@@ -42,7 +44,7 @@ def rebuild(config):
     Path(config['snapshot_output']).write_text(json.dumps(snapshot,ensure_ascii=False),encoding='utf-8')
     return snapshot
 
-def serve(config,port):
+def make_server(config,port):
     token=secrets.token_hex(32);gate=threading.Lock();authority=f'127.0.0.1:{port}';origin=f'http://{authority}'
     class Handler(SimpleHTTPRequestHandler):
         def log_message(self,*args):pass
@@ -76,8 +78,21 @@ def serve(config,port):
                 self.json(result)
             except Exception as error:self.json(dict(ok=False,error=str(error)),400)
     server=ThreadingHTTPServer(('127.0.0.1',port),partial(Handler,directory=str(ROOT/'workbench/web')))
-    print(f'独立体验工作台：{origin}/full/index.html',flush=True)
-    server.serve_forever()
+    return server
+
+
+def serve(config,port,open_browser=False,on_started=None):
+    server=make_server(config,port)
+    try:
+        if on_started:on_started()
+        url=f'http://127.0.0.1:{port}/full/index.html'
+        print('独立体验工作台：'+url,flush=True)
+        if open_browser:
+            import webbrowser
+            webbrowser.open(url)
+        server.serve_forever()
+    finally:
+        server.server_close()
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--port',type=int,default=8896);parser.add_argument('--initialize-only',action='store_true');args=parser.parse_args();config=initialize()

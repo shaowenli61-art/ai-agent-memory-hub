@@ -168,6 +168,36 @@ def load_snapshot(vault: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _commit_texts(writes, *, writer, actor, reason, backups):
+    """Rollback owned writes on failure; refuse to overwrite a concurrent edit."""
+    completed = []
+    try:
+        for path, original, content in writes:
+            current = path.read_bytes() if path.exists() else None
+            if current != original:
+                raise RuntimeError('收工来源被并发修改；保留原文，刷新后再试。')
+            expected = content.encode('utf-8')
+            completed.append((path, original, expected))
+            writer(path, content, actor, reason, backups)
+            if path.read_bytes() != expected:
+                raise RuntimeError('收工写入未通过字节校验；保留快照后检查。')
+    except Exception as failure:
+        conflicts = []
+        for path, original, expected in reversed(completed):
+            current = path.read_bytes() if path.exists() else None
+            if current == original:
+                continue
+            if current != expected:
+                conflicts.append(str(path)); continue
+            if original is None:
+                path.unlink()
+            else:
+                path.write_bytes(original)
+        if conflicts:
+            raise RuntimeError('收工未完成，存在并发版本；不得自动恢复：' + '; '.join(conflicts)) from failure
+        raise
+
+
 def _close_task(
     *,
     vault: Path,
@@ -184,8 +214,65 @@ def _close_task(
     risks: str = "无",
     avoid_repeat: str = "无",
     verification: str = "",
+    task_id: str | None = None,
+    revises_receipt_id: str | None = None,
+    request_id: str | None = None,
+    new_task: bool = False,
+    growth_events: tuple[str, ...] = (),
+    growth_impact: str = "unknown",
+    growth_impact_reason: str = "",
+    growth_reviewer=None,
 ) -> dict:
     day = event_date or date.today()
+    prior_events = _read_events(vault)
+    request_payload = dict(task=task, status=status, completed=completed, next_action=next_action,
+        evidence=evidence, agent=agent, collaborator=collaborator, project=project,
+        remaining=remaining, risks=risks, avoid_repeat=avoid_repeat, verification=verification,
+        task_id=task_id, revises_receipt_id=revises_receipt_id, new_task=new_task,
+        growth_events=list(growth_events), growth_impact=growth_impact, growth_impact_reason=growth_impact_reason)
+    request_hash = hashlib.sha256(json.dumps(request_payload, ensure_ascii=False,
+        sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+    if request_id:
+        previous_request = next((r for r in prior_events if r.get('request_id') == request_id), None)
+        if previous_request:
+            if previous_request.get('request_hash') != request_hash:
+                raise ValueError('request_id 已用于不同收工内容；请核对或使用新请求键。')
+            daylog = vault / '10-Daily' / (previous_request['date'] + '-worklog.md')
+            if not daylog.exists() or previous_request['receipt_id'] not in daylog.read_text(encoding='utf-8'):
+                raise RuntimeError('原请求未完整提交；保留写前快照并恢复缺失日志，不能当作已完成。')
+            if previous_request.get('project'):
+                source = vault / '50-Agent-Workflows/90-Logs/memory-close-receipts.jsonl'
+                rows = [json.loads(line) for line in source.read_text(encoding='utf-8-sig').splitlines() if line.strip()] if source.exists() else []
+                formal_previous = next((r for r in rows if r.get('receipt_id') == previous_request['receipt_id']), None)
+                if not formal_previous:
+                    raise RuntimeError('原请求缺少正式回执；请从写前快照恢复，不重复认证成功。')
+                from memory_growth.receipts import require_valid_formal_receipt
+                require_valid_formal_receipt(formal_previous)
+            return dict(previous_request, replayed_request=True)
+    revised = next((r for r in prior_events if r['receipt_id'] == revises_receipt_id), None) if revises_receipt_id else None
+    if revises_receipt_id and (not revised or not revised.get('task_id')):
+        raise ValueError('修订回执不存在或缺少稳定 task_id；不能自动推断历史身份。')
+    if revised:
+        if task_id and task_id != revised['task_id']:
+            raise ValueError('task_id 与修订回执冲突。')
+        task_id = revised['task_id']
+    if new_task and (task_id or revises_receipt_id):
+        raise ValueError('new_task 不能与已有任务身份混用。')
+    explicit = bool(task_id or new_task)
+    if task_id and not re.fullmatch(r'TK-[A-Za-z0-9_.-]{1,120}', task_id):
+        raise ValueError('task_id 必须为 TK- 开头的稳定标识。')
+    if not task_id and not new_task:
+        prior = next((r for r in reversed(prior_events) if r['task'] == task
+            and r.get('project', '') == project and r.get('agent', '') == agent), None)
+        task_id = prior.get('task_id') if prior else None
+    task_id = task_id or 'TK-' + uuid4().hex
+    episode = [r for r in prior_events if r.get('task_id') == task_id]
+    if any(r['task'] != task or r.get('project', '') != project for r in episode):
+        raise ValueError('同一 task_id 不能跨任务或项目复用。')
+    previous = episode[-1] if episode else None
+    if revised and previous and revised['receipt_id'] != previous['receipt_id']:
+        raise ValueError('任务已有更新回执；旧复盘不能替代最新更正，请先读取新版本。')
+    moment = datetime.now().astimezone().isoformat(timespec='microseconds')
     event = {
         "receipt_id": f"MH-{day:%Y%m%d}-{uuid4().hex[:12]}",
         "date": day.isoformat(),
@@ -197,6 +284,15 @@ def _close_task(
         "agent": agent,
         "collaborator": collaborator,
         "project": project,
+        "schema_version": 2,
+        "timestamp": moment,
+        "task_id": task_id,
+        "identity_state": "explicit" if explicit else "identity_unresolved",
+        "revision": (previous.get('revision', 1) + 1) if previous else 1,
+        "supersedes_receipt_id": previous['receipt_id'] if previous else '',
+        "request_id": request_id or '',
+        "request_hash": request_hash,
+        "remaining": remaining, "risks": risks, "avoid_repeat": avoid_repeat, "verification": verification,
     }
     formal = None
     if project:
@@ -213,30 +309,39 @@ def _close_task(
         if not identity:
             raise ValueError('项目页缺少 project_id；请核对后补充稳定身份。')
         project_id = identity.group(1).strip().strip('"\'')
-        moment = datetime.now().astimezone().isoformat(timespec='seconds')
         event['receipt_id'] = f'MC-{day:%Y%m%d}-{uuid4().hex[:12]}'
         states = dict(active='进行中',completed='已完成',**{'stage-complete':'阶段完成'},waiting='等待用户',blocked='受阻',handoff='待接手',terminated='已终止')
-        formal = dict(schema_version=3,receipt_id=event['receipt_id'],task_id='TK-'+uuid4().hex,
+        formal = dict(schema_version=3,receipt_id=event['receipt_id'],task_id=task_id,
             timestamp=moment,project_id=project_id,scope='project:'+project_id,project_page=str(page),
             task=task,state=states[status],completed=completed,remaining=remaining,next_action=next_action,
             files=';'.join(str((vault/Path(item)).resolve()) if not Path(item).is_absolute() else item for item in evidence),
             evidence=';'.join(evidence),risks=risks,avoid_repeat=avoid_repeat,agent=agent,verification=verification)
-        formal['record_hash'] = hashlib.sha256(json.dumps(formal,ensure_ascii=False,sort_keys=True,separators=(',',':'),allow_nan=False).encode()).hexdigest()
+        formal.update(revision=event['revision'], supersedes_receipt_id=event['supersedes_receipt_id'],
+            identity_state=event['identity_state'], request_id=event['request_id'])
+    from memory_growth.workspace import GrowthWorkspace
+    config_file = vault / '.memory-hub/workbench-config.json'
+    growth_config = json.loads(config_file.read_text(encoding='utf-8')) if config_file.exists() else dict(memory_hub_root=str(vault))
+    workspace = GrowthWorkspace(growth_config)
+    growth = workspace.assess(formal or event, events=growth_events, impact=growth_impact,
+        impact_reason=growth_impact_reason, reviewer=growth_reviewer)
+    event['growth'] = growth
+    if formal:
+        from memory_growth.receipts import seal_formal_receipt
+        formal = seal_formal_receipt({**formal, 'growth': growth})
     log = _event_log(vault)
     log.parent.mkdir(parents=True, exist_ok=True)
     from scripts.file_write_guard import safe_write_text
     backups = vault / '.memory-hub/backups/close'
-    old = log.read_text(encoding='utf-8') if log.exists() else ''
-    safe_write_text(log,old+json.dumps(event,ensure_ascii=False)+'\n',agent or 'Agent',event['receipt_id'],backups)
+    old_log = log.read_bytes() if log.exists() else None
+    writes = []
     if formal:
         receipts = vault / '50-Agent-Workflows/90-Logs/memory-close-receipts.jsonl'
-        old = receipts.read_text(encoding='utf-8') if receipts.exists() else ''
-        safe_write_text(receipts,old+json.dumps(formal,ensure_ascii=False)+'\n',agent or 'Agent',event['receipt_id'],backups)
+        old = receipts.read_bytes() if receipts.exists() else None
+        writes.append((receipts, old, (old.decode('utf-8') if old is not None else '') + json.dumps(formal,ensure_ascii=False)+'\n'))
     daily = vault / "10-Daily" / f"{day.isoformat()}-worklog.md"
     daily.parent.mkdir(parents=True, exist_ok=True)
-    if not daily.exists():
-        daily.write_text(f"# {day.isoformat()} Worklog\n", encoding="utf-8")
-    safe_write_text(daily,daily.read_text(encoding='utf-8')+(
+    old_daily = daily.read_bytes() if daily.exists() else None
+    writes.append((daily, old_daily, (old_daily.decode('utf-8') if old_daily is not None else f"# {day.isoformat()} Worklog\n")+(
             f"\n## 任务收工：{task}\n\n"
             f"- **当前状态**：{formal['state'] if formal else status}\n"
             f"- **本次完成**：{completed}\n"
@@ -249,8 +354,16 @@ def _close_task(
             f"- **残留风险**：{risks}\n"
             f"- **禁止重踩**：{avoid_repeat}\n"
             f"- **收工回执**：`{event['receipt_id']}`\n"
-        ),agent or 'Agent',event['receipt_id'],backups)
-    write_snapshot(vault)
+        )))
+    writes.append((log, old_log, (old_log.decode('utf-8') if old_log is not None else '') + json.dumps(event,ensure_ascii=False)+'\n'))
+    _commit_texts(writes, writer=safe_write_text, actor=agent or 'Agent', reason=event['receipt_id'], backups=backups)
+    event['growth_sync'] = workspace.after_receipt(event['receipt_id'])
+    try:
+        write_snapshot(vault)
+        event['snapshot_state'] = 'refreshed'
+    except Exception as exc:
+        event['snapshot_state'] = 'pending'
+        event['snapshot_error'] = str(exc)
     return event
 
 

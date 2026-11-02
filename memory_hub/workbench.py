@@ -13,7 +13,7 @@ PACKAGE_ROOT=Path(__file__).resolve().parents[1]
 def config_path(vault):
     return Path(vault)/'.memory-hub/workbench-config.json'
 
-def configure(vault, *, job=None, personal=None, owner=None, semantic_model=None, semantic_onnx=None, reranker=None, package_root=None):
+def configure(vault, *, job=None, personal=None, owner=None, semantic_model=None, semantic_onnx=None, reranker=None, package_root=None, growth_mode=None, growth_runtime_root=None):
     vault=Path(vault).expanduser().resolve()
     target=config_path(vault)
     prior=json.loads(target.read_text(encoding='utf-8')) if target.exists() else {}
@@ -30,6 +30,14 @@ def configure(vault, *, job=None, personal=None, owner=None, semantic_model=None
     for folder in (default_job,default_personal):
         folder.mkdir(parents=True,exist_ok=True)
     config=dict(prior)
+    if growth_mode is not None and growth_mode not in ('enabled', 'disabled'):
+        raise ValueError('invalid growth_mode')
+    config.setdefault('growth_mode', 'disabled')
+    if growth_mode is not None:
+        config['growth_mode'] = growth_mode
+    config.setdefault('growth_runtime_root', str(vault.with_name(vault.name + '.growth-runtime')))
+    if growth_runtime_root is not None:
+        config['growth_runtime_root'] = str(Path(growth_runtime_root).expanduser().resolve())
     config.setdefault('job_vault_root',str(default_job))
     config.setdefault('personal_vault_root',str(default_personal))
     for key,value in [('job_vault_root',job),('personal_vault_root',personal),('semantic_model_path',semantic_model),('semantic_onnx_path',semantic_onnx),('reranker_model_path',reranker)]:
@@ -62,6 +70,9 @@ def configure(vault, *, job=None, personal=None, owner=None, semantic_model=None
         from scripts.file_write_guard import safe_write_text
         safe_write_text(target,rendered,'Installer','configure-local-workbench',state/'backups/config')
     config['_config_path']=str(target)
+    if growth_mode == 'enabled':
+        from memory_growth.workspace import GrowthWorkspace
+        GrowthWorkspace(config).initialize()
     return config
 
 def load_config(vault):

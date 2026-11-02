@@ -362,7 +362,7 @@ function maturityStage(maturity) {
 function renderMethods(snapshot) {
   const panel = document.querySelector('.method-space');
   const head = element('div', 'panel-head');
-  head.append(element('h3', '', '方法论证据管线'), element('span', '', `${snapshot.capabilities?.length || 0} 个能力域 · 来自正式能力地图`));
+  head.append(element('h3', '', '能力地图与人工成熟度'), element('span', '', `${snapshot.capabilities?.length || 0} 个能力域 · 保留原人工标记，不是协议自动验收`));
   const stageHead = element('div', 'stage-head');
   ['知识资产', '候选', '已提炼', '已实践', '已复验', '可复用'].forEach(label => stageHead.append(element('div', '', label)));
   const rows = (snapshot.capabilities || []).map(capability => {

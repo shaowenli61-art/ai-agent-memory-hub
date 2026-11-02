@@ -70,9 +70,9 @@ def make_server(vault, port=8896):
                     self.send_json(dict(ok=True));threading.Thread(target=self.server.shutdown,daemon=True).start();return
                 with gate:
                     if self.path=='/api/work-cycle':
-                        result=command(config,request)
+                        result=command(load_config(vault),request)
                     elif self.path=='/api/project-lifecycle':
-                        event=change_state(config,request); result=dict(ok=True,event_id=event['event_id'])
+                        event=change_state(load_config(vault),request); result=dict(ok=True,event_id=event['event_id'])
                     else:
                         raise ValueError('Unknown action')
                     if result.get('open_path'):

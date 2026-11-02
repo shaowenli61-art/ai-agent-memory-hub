@@ -1,0 +1,4 @@
+# Keep the shared-source byte fingerprint stable in Windows checkouts.
+memory_growth/*.py text eol=lf
+memory_growth/source-manifest.json text eol=lf
+protocols/growth-ai-collaboration-v3.3.0.md text eol=lf

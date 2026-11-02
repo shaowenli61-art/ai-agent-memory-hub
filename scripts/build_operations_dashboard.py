@@ -1668,6 +1668,16 @@ def build_snapshot(config: dict[str, Any], now: datetime | None = None) -> dict[
         },
     }
     apply_lifecycle(snapshot, config)
+    try:
+        import sys
+        module_root = Path(config.get('write_guard_scripts') or Path(__file__).resolve().parent).parent
+        if str(module_root) not in sys.path:
+            sys.path.insert(0, str(module_root))
+        from memory_growth.workspace import enrich_growth
+        enrich_growth(snapshot, config)
+    except ImportError as exc:
+        snapshot['growth'] = dict(mode=config.get('growth_mode', 'legacy_unconfigured'),
+            status='unavailable', tasks=[], methods=[], error=str(exc))
     enrich_work_cycle(snapshot, config)
     snapshot["recommendations"] = recommendation_rules(snapshot)
     return snapshot

@@ -47,6 +47,13 @@ def build_parser() -> argparse.ArgumentParser:
     close.add_argument('--risks',default='无')
     close.add_argument('--avoid-repeat',default='无')
     close.add_argument('--verification',default='',help='actual checks and results, never inferred from completion')
+    close.add_argument('--task-id')
+    close.add_argument('--revises-receipt-id')
+    close.add_argument('--request-id')
+    close.add_argument('--new-task',action='store_true')
+    close.add_argument('--growth-event',action='append',default=[])
+    close.add_argument('--growth-impact',choices=('unknown','ordinary','high','safety'),default='unknown')
+    close.add_argument('--growth-impact-reason',default='')
     verify = commands.add_parser("verify", help="verify a deployed memory hub")
     verify.add_argument("--vault", type=Path, required=True)
     snapshot = commands.add_parser("snapshot", help="rebuild the workbench snapshot")
@@ -56,6 +63,15 @@ def build_parser() -> argparse.ArgumentParser:
     for flag in ('job','personal','semantic-model','semantic-onnx','reranker'):
         setup.add_argument('--'+flag,type=Path)
     setup.add_argument('--owner')
+    setup.add_argument('--growth-mode',choices=('enabled','disabled'))
+    setup.add_argument('--growth-runtime-root',type=Path)
+    growth=commands.add_parser('growth',help='growth status, evidence-scoped review and original-receipt replay')
+    growth.add_argument('action',choices=('status','prompt','review','replay','report'))
+    growth.add_argument('--vault',type=Path,required=True)
+    growth.add_argument('--receipt-id')
+    growth.add_argument('--response-file',type=Path)
+    growth.add_argument('--month')
+    growth.add_argument('--dry-run',action='store_true')
     project=commands.add_parser('project',help='register an existing project directory without moving files')
     project.add_argument('--vault',type=Path,required=True)
     project.add_argument('--name',required=True)
@@ -127,6 +143,8 @@ def main(argv: list[str] | None = None) -> int:
             agent=args.agent,
             collaborator=args.collaborator,
             project=args.project,remaining=args.remaining,risks=args.risks,avoid_repeat=args.avoid_repeat,verification=args.verification,
+            task_id=args.task_id,revises_receipt_id=args.revises_receipt_id,request_id=args.request_id,new_task=args.new_task,
+            growth_events=tuple(args.growth_event),growth_impact=args.growth_impact,growth_impact_reason=args.growth_impact_reason,
         )
         print(json.dumps(receipt, ensure_ascii=False, indent=2))
         return 0
@@ -140,7 +158,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command=='setup':
         from memory_hub.workbench import configure,doctor,refresh_snapshot
-        configure(args.vault,job=args.job,personal=args.personal,owner=args.owner,semantic_model=args.semantic_model,semantic_onnx=args.semantic_onnx,reranker=args.reranker)
+        configure(args.vault,job=args.job,personal=args.personal,owner=args.owner,semantic_model=args.semantic_model,semantic_onnx=args.semantic_onnx,reranker=args.reranker,growth_mode=args.growth_mode,growth_runtime_root=args.growth_runtime_root)
         refresh_snapshot(args.vault)
         print(json.dumps(doctor(args.vault),ensure_ascii=False,indent=2))
         return 0
@@ -161,6 +179,44 @@ def main(argv: list[str] | None = None) -> int:
         report=inspect_startup(args.vault)
         print(json.dumps(report,ensure_ascii=False,indent=2))
         return 0 if report['ok'] else 1
+    if args.command=='growth':
+        from memory_hub.workbench import load_config
+        from memory_growth.workspace import GrowthWorkspace
+        workspace=GrowthWorkspace(load_config(args.vault))
+        if args.action=='status':
+            result=workspace.view()
+        elif args.action=='prompt':
+            print(workspace.review_request(args.receipt_id));return 0
+        elif args.action=='replay':
+            if not args.receipt_id:raise ValueError('--receipt-id is required')
+            result=workspace.after_receipt(args.receipt_id)
+            write_snapshot(args.vault)
+        elif args.action=='report':
+            if not args.month:raise ValueError('--month is required')
+            from memory_growth.reporting import summarize_month
+            workspace.view()  # Validate all existing source checkpoints before any write.
+            rows=workspace.report_rows()
+            result=summarize_month(rows,workspace._rows(workspace.events_name),month=args.month)
+            if not args.dry_run:
+                with workspace._lock():workspace.refresh_reports([args.month])
+        else:
+            if not args.receipt_id or not args.response_file:raise ValueError('--receipt-id and --response-file are required')
+            workspace.review_request(args.receipt_id)  # Require explicit enabled mode and an existing source.
+            from memory_hub.workflow import _read_events
+            source=next((r for r in _read_events(args.vault) if r['receipt_id']==args.receipt_id),None)
+            if not source:raise ValueError('Use the original private closure Adapter for a non-public receipt; no history was changed.')
+            response=args.response_file.read_text(encoding='utf-8-sig')
+            json.loads(response)
+            import hashlib
+            result=close_task(vault=args.vault,task=source['task'],status=source['status'],
+                completed=source['completed'],next_action=source['next_action'],evidence=source['evidence'],
+                agent=source.get('agent',''),collaborator=source.get('collaborator',''),project=source.get('project',''),
+                remaining=source.get('remaining','未登记'),risks=source.get('risks','无'),avoid_repeat=source.get('avoid_repeat','无'),
+                verification=source.get('verification',''),task_id=source['task_id'],revises_receipt_id=source['receipt_id'],
+                request_id='GR-'+hashlib.sha256((source['receipt_id']+response).encode()).hexdigest(),
+                growth_events=('user_requested_retrospective',),growth_reviewer=lambda _:response)
+        print(json.dumps(result,ensure_ascii=False,indent=2))
+        return 1 if result.get('state')=='pending' or result.get('status')=='integrity_error' else 0
     return 2
 
 

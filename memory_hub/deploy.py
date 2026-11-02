@@ -154,6 +154,7 @@ def build_install_plan(
         "rule_scope": rule_scope,
         "workbench": workbench,
         "growth_mode": growth_mode,
+        "growth_runtime_root": str(vault.expanduser().resolve().with_name(vault.name + '.growth-runtime')) if growth_mode == 'enabled' else None,
         "detected_prerequisites": environment.get("prerequisites", {}),
     }
 
@@ -212,6 +213,10 @@ def _render_rule_block(vault: Path, package_root: Path, protocol: str | None) ->
         "- Write only verified facts, decisions, evidence, and next actions.\n"
         "- Never store passwords, API keys, cookies, or full connection strings.\n"
         f"- At task close, run from `{package_root}`: `python -m memory_hub close --vault \"{vault}\" ...`.\n"
+        "- Follow `docs/growth-loop.md`: use a stable `--task-id` for one Episode, "
+        "`--new-task` for genuinely new work and `--revises-receipt-id` for corrections.\n"
+        "- Growth review uses existing authorized Agent capability; no configured reviewer means pending, "
+        "not success. Never fabricate review JSON or invoke another model repeatedly without new evidence.\n"
     )
     if protocol:
         base += f"\n{protocol.strip()}\n"
@@ -226,7 +231,12 @@ def apply_install_plan(plan: dict, *, package_root: Path, confirmed: bool) -> di
         verify_package(package_root)
     vault = Path(plan["vault"])
     _initialize_vault(vault)
-    protocol_path = package_root / "protocols" / "growth-ai-collaboration-v3.2.1.md"
+    from memory_hub.workbench import configure
+    configure(vault, package_root=package_root, growth_mode=plan.get('growth_mode', 'disabled'),
+        growth_runtime_root=plan.get('growth_runtime_root'))
+    protocol_path = package_root / "protocols" / "growth-ai-collaboration-v3.3.0.md"
+    if not protocol_path.is_file():
+        protocol_path = package_root / "protocols" / "growth-ai-collaboration-v3.2.1.md"
     protocol = (
         protocol_path.read_text(encoding="utf-8")
         if plan.get("growth_mode", "enabled") == "enabled"
@@ -270,6 +280,8 @@ def apply_install_plan(plan: dict, *, package_root: Path, confirmed: bool) -> di
         web_workbench = str(web_install)
     return {
         "status": "installed",
+        "growth_mode": plan.get('growth_mode', 'disabled'),
+        "growth_protocol": protocol_path.name if protocol else 'disabled',
         "vault": str(vault),
         "updated_rule_files": updated,
         "managed_rule_files": list(plan["rule_targets"].values()),

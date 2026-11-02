@@ -76,6 +76,11 @@ python -B -m memory_hub project --vault "C:/my-memory" --name "我的项目" --p
 
 ## 可选高级部署
 
+v0.3.0 的成长记录需单独启用：`python -B -m memory_hub setup --vault "C:/my-memory" --growth-mode enabled`。
+锁、连续性水印和待同步队列默认放在与正式库同级的独立 `my-memory.growth-runtime`，不放入源码或正式库。
+启用记录不等于安装全局协议，也不配置或调用云模型；需要复盘但未提供评审时明确显示待处理。
+任务身份、已有 Agent 复盘、月报、恢复与关闭方式见 [成长闭环说明](docs/growth-loop.md)。
+
 只有用户要求让Agent长期自动遵循共享记忆规则时，才使用 `docs/agent-deployment.md` 的计划与安装流程。展示规则路径、作用域和备份，取得该范围明确授权后再安装；已有授权不重复询问。
 
 更新与回退见 `docs/local-workbench.md`。更新保留个人资料、配置与启动设置，有意定制过的源码需自行合并。默认不要求API Key、不调用云模型、不开放公网端口。Windows网页路线是当前实机验收对象，macOS/Linux需在对应机器另行验收。

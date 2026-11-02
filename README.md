@@ -6,7 +6,7 @@
 
 **Local deployment:** download or clone the project, then ask your existing Agent to read [INSTALL.md](INSTALL.md). It checks the package and both startup paths before configuring the trial or real workspace. Ordinary web use does not require global Agent rules, Obsidian, desktop dependencies or a model.
 
-[Download v0.2.1 deployment ZIP](https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/download/v0.2.1/AI-Personal-Workbench-v0.2.1.zip) · [Synthetic interactive HTML](https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/download/v0.2.1/AI-Personal-Workbench-Demo-v0.2.1.html). The HTML uses invented data and browser-only simulation; it does not access your files or execute an Agent. See [preview boundaries](docs/standalone-preview.md).
+[Download v0.3.0 deployment ZIP](https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/download/v0.3.0/AI-Personal-Workbench-v0.3.0.zip) · [Synthetic interactive HTML](https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/download/v0.3.0/AI-Personal-Workbench-Demo-v0.3.0.html). The HTML uses invented data and browser-only simulation; it does not access your files or execute an Agent. See [preview boundaries](docs/standalone-preview.md).
 
 ### Keep project facts, decisions, evidence, and next actions local—so every AI agent can continue where the last one stopped
 
@@ -40,6 +40,12 @@ AI Agent Memory Hub stores them in a **local Obsidian Vault owned by the user** 
 | Long-term memory fills with guesses and chat noise | Only facts, decisions, evidence, and executable next steps are retained; inferences must state their basis |
 | An installer overwrites global agent rules | The agent first runs a read-only inspection and produces a plan; managed blocks are written only after approval, with automatic backups |
 | Many tasks exist, but the real main thread is unclear | The web or Windows desktop workbench shows open tasks, blockers, and next actions |
+
+## New in v0.3.0: an auditable growth loop
+
+Shared deterministic triggers, evidence-scoped review, stable task revisions, explicit workbench feedback, durable evaluation, monthly reports and continuation context now work together. Growth remains opt-in; no model is called by default. Adoption is not outcome verification and a candidate is not a promoted Policy. [Workflow and boundaries](docs/growth-loop.md) · [Upgrade checklist](docs/growth-upgrade.md).
+
+The full World Fact / L2-L3 Policy runtime and TaskMemoryPacket compiler remain private pilot capabilities, not public-release features. Windows web is the current hands-on validation target; other platforms and Agents need separate behavior acceptance.
 
 ## Workbench Preview
 
@@ -75,7 +81,7 @@ The intended users already work with local agents, so this project writes the de
 
 ### 4. Optional Growth-Oriented AI Collaboration Protocol
 
-The repository includes the reusable [Growth-Oriented AI Collaboration Protocol V3.2.1](protocols/growth-ai-collaboration-v3.2.1.md). When enabled, agents do more than mechanically execute: on important work they distinguish facts, inferences, and testable hypotheses; surface blind spots that may change the route; and leave final judgment to the user.
+The repository includes the reusable [Growth-Oriented AI Collaboration Protocol V3.3.0](protocols/growth-ai-collaboration-v3.3.0.md). When enabled, agents do more than mechanically execute: on important work they distinguish facts, inferences, and testable hypotheses; surface blind spots that may change the route; and leave final judgment to the user.
 
 ### 5. Privacy starts with the release structure
 
@@ -110,7 +116,7 @@ The agent will confirm the four choices that materially affect deployment:
 
 1. use an existing Obsidian Vault or create a new empty Vault;
 2. apply rules to the current project only or to selected agents' global rules;
-3. enable or disable the Growth-Oriented AI Collaboration Protocol V3.2.1;
+3. enable or disable the Growth-Oriented AI Collaboration Protocol V3.3.0;
 4. install no workbench, the web workbench, or—on Windows—the desktop workbench.
 
 See the complete [agent-driven deployment guide (Chinese)](docs/agent-deployment.md).

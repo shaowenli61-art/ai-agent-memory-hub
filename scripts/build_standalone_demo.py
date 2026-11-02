@@ -72,7 +72,7 @@ def build(output):
 <div class="preview-eyebrow">虚拟数据 · 离线交互 · 不连接你的真实资料</div>
 <h1>把工作交接清楚，让下一步真正发生。</h1>
 <p>7个虚拟项目，完整走一遍“找依据 → 继续工作 → 看成果 → 判断采用 → 归档复用”。这里的数字与反馈均为虚构样例，不是业务成效证明。</p>
-<div class="preview-controls"><button id="previewStart">从月报验收开始 →</button><button id="previewDeliver">模拟Agent交付新版本</button><button id="previewChange">模拟已采用文件变更</button><button id="previewGuide">功能与边界</button><button id="previewReset">重置虚拟样例</button><a href="https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/tag/v0.2.1" target="_blank" rel="noopener">下载完整部署包 ↗</a></div>
+<div class="preview-controls"><button id="previewStart">从月报验收开始 →</button><button id="previewDeliver">模拟Agent交付新版本</button><button id="previewChange">模拟已采用文件变更</button><button id="previewGuide">功能与边界</button><button id="previewReset">重置虚拟样例</button><a href="https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/tag/v0.3.0" target="_blank" rel="noopener">下载完整部署包 ↗</a></div>
 <p id="previewStatus" role="status">仅本页保存虚拟决定；本机部署、真实语义检索、Agent执行与外部发布请使用完整运行包。</p></section>'''
     marker=re.search(r'<main[^>]*>',page)
     assert marker

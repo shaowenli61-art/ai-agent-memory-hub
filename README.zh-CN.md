@@ -6,7 +6,7 @@
 
 **本地部署：** 下载或克隆项目后，让你现有的Agent完整读取 [INSTALL.md](INSTALL.md)。先只读检查源码包与两种启动入口，再按你的选择启动体验或接入真实资料；普通网页使用不必先安装全局规则、Obsidian、桌面依赖或模型。
 
-[下载 v0.2.1 完整部署包](https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/download/v0.2.1/AI-Personal-Workbench-v0.2.1.zip) · [下载虚拟数据交互 HTML](https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/download/v0.2.1/AI-Personal-Workbench-Demo-v0.2.1.html)。HTML仅用虚构资料模拟交互，不访问本机文件或执行Agent，具体见[体验页功能与边界](docs/standalone-preview.md)。
+[下载 v0.3.0 完整部署包](https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/download/v0.3.0/AI-Personal-Workbench-v0.3.0.zip) · [下载虚拟数据交互 HTML](https://github.com/shaowenli61-art/ai-agent-memory-hub/releases/download/v0.3.0/AI-Personal-Workbench-Demo-v0.3.0.html)。HTML仅用虚构资料模拟交互，不访问本机文件或执行Agent，具体见[体验页功能与边界](docs/standalone-preview.md)。
 
 ### 把项目事实、决策、证据和下一步留在本地，让不同 AI Agent 真正接续工作
 
@@ -40,6 +40,12 @@ AI Agent Memory Hub 把这些内容沉淀到**用户拥有的本地 Obsidian Vau
 | 长期记忆混入猜测和聊天噪音 | 只写事实、决策、证据和可执行下一步，推断必须标明依据 |
 | 安装脚本直接覆盖全局规则 | 先只读体检和生成计划，用户确认后才写受管区块，并自动备份 |
 | 任务很多但看不清真正主线 | 网页或 Windows 桌面工作台展示开放任务、受阻项和下一动作 |
+
+## v0.3.0：可审计的成长闭环
+
+本版将确定性事件、受证据约束的复盘、稳定任务修订、工作台显式反馈、持久评估、月报与接续上下文接成同源闭环。记录需主动启用，默认不调用模型；采用不等于效果已验证，候选不等于正式 Policy。[使用与边界](docs/growth-loop.md) · [统一升级清单](docs/growth-upgrade.md)。
+
+完整 World Fact、L2/L3 Policy 派生运行时与 TaskMemoryPacket 编译器仍为未公开的本地试点，不包装成本版功能。Windows 网页为本轮实机验收对象，其他平台与 Agent 需单独复验。
 
 ## 工作台预览
 
@@ -75,7 +81,7 @@ AI Agent Memory Hub 把这些内容沉淀到**用户拥有的本地 Obsidian Vau
 
 ### 4. 可选的成长型 AI 协作协议
 
-仓库包含通用的 [成长型 AI 协作协议 V3.2.1](protocols/growth-ai-collaboration-v3.2.1.md)。启用后，Agent 不只机械执行，还会在重要任务中区分事实、推断和待验证假设，识别可能改变路线的盲区，并把最终判断权留给用户。
+仓库包含通用的 [成长型 AI 协作协议 V3.3.0](protocols/growth-ai-collaboration-v3.3.0.md)。启用后，Agent 不只机械执行，还会在重要任务中区分事实、推断和待验证假设，识别可能改变路线的盲区，并把最终判断权留给用户。
 
 ### 5. 隐私边界从发行结构开始
 
@@ -108,7 +114,7 @@ Agent 会与用户确认四个真正影响部署路线的问题：
 
 1. 使用已有 Obsidian Vault，还是创建新的空 Vault；
 2. 规则只对当前项目生效，还是写入指定 Agent 的全局规则；
-3. 是否启用成长型 AI 协作协议 V3.2.1；
+3. 是否启用成长型 AI 协作协议 V3.3.0；
 4. 不安装工作台、安装网页工作台，还是在 Windows 上安装桌面工作台。
 
 完整流程见 [Agent 驱动部署说明](docs/agent-deployment.md)。

@@ -48,8 +48,7 @@ def snapshot_file(path: Path, actor: str, reason: str, snapshot_root: Path | Non
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
     snapshot = root / f"{stamp}-{safe_name(path)}.md"
     meta = snapshot.with_suffix(snapshot.suffix + ".json")
-    text = path.read_text(encoding="utf-8")
-    snapshot.write_text(text, encoding="utf-8")
+    snapshot.write_bytes(path.read_bytes())
     meta.write_text(
         json.dumps(
             {
@@ -81,7 +80,7 @@ def safe_write_text(
     snapshot = snapshot_file(target, actor, reason, root)
     if not allow_mass_deletion and suspicious_deletion(old, content):
         raise RuntimeError(f"write rejected: suspicious mass deletion for {target}")
-    target.write_text(content, encoding="utf-8")
+    target.write_bytes(content.encode("utf-8"))
     return snapshot
 
 
@@ -94,7 +93,7 @@ def restore_snapshot(snapshot: Path | str, target: Path | str | None = None) -> 
     else:
         target_path = Path(target)
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    target_path.write_text(snapshot_path.read_text(encoding="utf-8"), encoding="utf-8")
+    target_path.write_bytes(snapshot_path.read_bytes())
     return target_path
 
 

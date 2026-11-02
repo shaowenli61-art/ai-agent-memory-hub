@@ -8,6 +8,7 @@ window.workCycle = (() => {
   }
   function message(host,text,error=false){host.textContent=text;host.className=error?'wc-error':'wc-note';}
   function status(){const p=el('p','wc-note');p.setAttribute('role','status');p.setAttribute('aria-live','polite');return p;}
+  function observedLabel(value){return {unknown:'尚未观察',pending:'仍在观察',positive:'本人报告有帮助',neutral:'未见明显影响',negative:'本人报告不如预期',recovered:'本人报告已恢复',unattributed:'不能归因于 AI'}[value]||'尚未观察';}
   function projects(){return [...new Map(['projects','recent_focus','discovered_projects','archived_projects'].flatMap(g=>snapshot?.[g]||[]).map(p=>[p.lifecycle?.project_key,p])).values()];}
   function project(key){return projects().find(p=>p.lifecycle?.project_key===key);}
   async function api(request){
@@ -26,7 +27,9 @@ window.workCycle = (() => {
       render(result.snapshot);
       const current=project(key)?.current_brief;
       if(current)renderBrief(current);
-      const target=document.querySelector('#workCycleProject > [role="status"]');if(target)message(target,'已保存；所有接续入口使用同一份记录。');
+      const target=document.querySelector('#workCycleProject > [role="status"]');if(target)message(target,
+        result.growth?.state==='pending'||result.snapshot?.growth?.pending?'验收决定已保存；成长投影待处理，请查看成长协作状态。':
+        result.snapshot?.growth?.status==='integrity_error'?'决定已保存；成长来源校验未完成，原历史未改写。':'已保存；所有接续入口使用同一份记录。');
       return true;
     }catch(error){message(output,error.message,true);return false;}
   }
@@ -43,10 +46,44 @@ window.workCycle = (() => {
     snapshot=data;
     const host=document.getElementById('knowledgeSearch');
     if(!host.children.length)renderSearch(host);
+    renderGrowth(data.growth, host);
+  }
+  function renderGrowth(growth, before){
+    let host=document.getElementById('growthStatus');
+    if(!host){host=el('section','wc-section');host.id='growthStatus';before.before(host);}
+    host.replaceChildren(el('h2','','成长协作'));
+    if(growth?.mode==='preview'){
+      host.append(el('p','wc-note','这是虚构交互预览，不运行成长评审、不保存真实成长记录，也不展示效果统计。请部署完整包，在自己的独立记忆库中显式启用成长记录。'));return;
+    }
+    if(!growth||growth.mode!=='enabled'){
+      host.append(el('p','wc-note','成长记录未启用。普通收工、检索与成果反馈照常可用；不会调用模型或修改全局规则。'));return;
+    }
+    if(growth.status==='integrity_error'||growth.status==='unavailable'){
+      host.append(el('p','wc-error','成长记录校验未完成：'+(growth.error||'同源 Module 不可用')),
+        el('p','wc-note',growth.note||'保留原历史和快照；先修复来源，再按原回执重放。'));return;
+    }
+    const m=growth.metrics||{};
+    host.append(el('p','wc-note',`记录 ${m.tasks||0} 个任务 · 明确评估 ${m.assessed||0} 个：命中 ${m.hit||0}、漏判 ${m.missed||0}、无效打扰 ${m.unnecessary||0}。未判定不进入评估分母。`),
+      el('p','wc-note',`待复盘 ${m.pending_reviews||0} · 结果尚未观察 ${m.unknown_outcome||0} · 派生待同步 ${growth.pending||0} · 未关联任务的反馈 ${growth.unlinked_feedback||0}`));
+    const list=details('任务与方法证据');
+    const labels={not_required:'无需复盘',pending_llm:'待接入评审或补完复盘',insufficient_evidence:'证据不足',completed:'复盘契约完成',disabled:'未启用',unknown:'未知'};
+    for(const t of [...(growth.tasks||[])].slice(-8).reverse()){
+      const r=el('article','wc-delivery');r.append(el('h4','',t.task),el('p','wc-note',`${t.task_id} · ${labels[t.growth?.review_state]||'尚未评审'} · ${observedLabel(t.outcome_state)}`));list.append(r);
+    }
+    for(const method of growth.methods||[])list.append(el('p','wc-note',`待复验方法：${method.title}。证据：${(method.evidence_refs||[]).join('；')||'尚未提供'}。不是正式 Policy。`));
+    if(!(growth.tasks||[]).length)list.append(el('p','wc-empty','尚无可计入的稳定任务记录。先完成真实任务，不制造样本。'));
+    for(const report of growth.reports||[])list.append(el('p','wc-note',`${report.month} 月报：${report.path}`));
+    host.append(list,el('p','wc-note',growth.note||'采用不等于结果验证；候选方法仍待独立复验。'));
   }
   function renderProject(brief){
     const host=document.getElementById('workCycleProject');host.replaceChildren();host.hidden=!brief?.work_cycle;if(host.hidden)return;
     const cycle=brief.work_cycle,active=brief.lifecycle.state==='active';host.append(status());
+    if(cycle.growth?.mode==='enabled'){
+      const quality=section('成长协作状态');
+      quality.append(el('p','wc-note',cycle.growth.error||cycle.growth.note||'反馈只作证据；采用不等于结果验证，方法仍待复验。'));
+      for(const t of cycle.growth.tasks||[])quality.append(el('p','wc-note',`${t.task_id} · ${t.task} · 复盘 ${t.growth?.review_state||'unknown'} · ${observedLabel(t.outcome_state)}`));
+      host.append(quality);
+    }
     const advice=cycle.suggestion||{next_step:brief.next_action,reason:brief.next_basis,basis:brief.basis,criteria:'核对验证结果',needs_judgment:'判断是否继续。'};
     const resume=section(active?advice.label:'项目当前决定');const plan=cycle.plan;
     resume.append(el('h4','wc-advice-step',advice.next_step),el('p','wc-note',advice.reason));
@@ -72,8 +109,16 @@ window.workCycle = (() => {
       if(d.replaces)card.append(el('p','wc-note',`替代版本：${cycle.deliveries.find(x=>x.id===d.replaces)?.title||d.replaces}`));addFiles(card,d,brief);
       if(active){const review=details('查看后作出决定');const rf=el('form','wc-form');field(rf,'purpose','采用用途（如：正式报告／设计稿）',d.purpose==='待选择用途'?'当前项目成果':d.purpose,true);field(rf,'feedback','修改意见或判断说明',d.feedback||'',false,'textarea');
         const choice=el('label','wc-field','验收决定'),select=el('select');select.name='status';select.setAttribute('aria-label','验收决定');for(const [v,l] of [['accepted','采用这个版本'],['revise','需要修改'],['deferred','暂缓验收']]){const o=el('option','',l);o.value=v;select.append(o);}choice.append(select);rf.append(choice);field(rf,'until','暂缓到哪天（仅暂缓时填写）','',false,'date');
+        if(cycle.growth?.mode==='enabled'){
+          const observe=details('补充成长观察（可选，不填写则保持未知）');
+          for(const [name,label,choices] of [['outcome_state','本人已观察到的结果',[['unknown','尚未观察'],['positive','有帮助'],['neutral','没有明显影响'],['negative','不如预期'],['unattributed','有变化，但不能归因于 AI']]],['protocol_verdict','这次认知补充的表现',[['unassessed','尚未判断'],['hit','有价值的补充'],['miss','遗漏影响了判断（需填写说明，将进入待复盘）'],['unnecessary','造成无效打扰']]]]){
+            const wrap=el('label','wc-field',label),s=el('select');s.name=name;for(const [value,text] of choices){const o=el('option','',text);o.value=value;o.selected=d.growth_observation?.[name]===value;s.append(o);}wrap.append(s);observe.append(wrap);
+          }
+          rf.append(observe);
+        }
         if(d.plan_id&&d.plan_id===plan?.id){const done=field(rf,'complete_plan','本次目标全部达到完成标准，同时完成本次工作','',false,'checkbox');done.value='yes';}
-        formSubmit(rf,'保存验收决定',(data,p)=>mutate(brief,'review',{...data,complete_plan:data.complete_plan==='yes',delivery_id:d.id},p));review.append(rf);card.append(review);}deliveries.append(card);
+        formSubmit(rf,'保存验收决定',(data,p)=>mutate(brief,'review',{...data,complete_plan:data.complete_plan==='yes',delivery_id:d.id,
+          ...(cycle.growth?.mode==='enabled'?{growth_observation:{outcome_state:data.outcome_state||'unknown',protocol_verdict:data.protocol_verdict||'unassessed',confirmed_omission:data.protocol_verdict==='miss'}}:{})},p));review.append(rf);card.append(review);}deliveries.append(card);
     }
     if(active){const submit=details('补充成果（也可由 Agent 自动登记）');const f=el('form','wc-form');for(const [n,l]of [['title','成果名称'],['purpose','用途'],['paths','成果文件完整路径（每行一个）'],['changes','相对上一版有什么变化'],['verification','已经验证了什么'],['pending','仍需本人判断什么（没有请写“无”）']])field(f,n,l,'',true,n==='title'||n==='purpose'?'text':'textarea');
       const label=el('label','wc-field','替代哪一版（可选）'),select=el('select');select.name='replaces';select.append(el('option','',''));for(const d of cycle.deliveries){const o=el('option','',d.title);o.value=d.id;select.append(o);}label.append(select);f.append(label);

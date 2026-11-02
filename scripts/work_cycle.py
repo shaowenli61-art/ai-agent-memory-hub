@@ -35,6 +35,15 @@ def now_local():
     return datetime.now(ZONE)
 
 
+def growth_workspace(config):
+    """Resolve the shared Module beside the already configured write-guard Adapter."""
+    root = Path(config.get('write_guard_scripts') or Path(__file__).resolve().parent).parent
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+    from memory_growth.workspace import GrowthWorkspace
+    return GrowthWorkspace(config)
+
+
 def log_path(config):
     return Path(config['memory_hub_root']) / '50-Agent-Workflows/90-Logs/work-cycle.jsonl'
 
@@ -143,7 +152,9 @@ def candidate_deliveries(project, receipts):
             title=row['task'], purpose='待选择用途', changes=row.get('completed', ''),
             verification=row.get('verification', '回执未单独登记验证结果'), pending=row.get('remaining', '未登记'),
             files=files, submitted_at=row['timestamp'], origin='正式任务回执中的成果候选',
-            source=row['receipt_id'], plan_id='', replaces=''))
+            source=row['receipt_id'], plan_id='', replaces='',
+            episode_ref=dict(task_id=row['task_id'], project_id=row['project_id'],
+                receipt_id=row['receipt_id'], record_hash=row['record_hash'])))
         if len(result) == 4:
             break
     return result
@@ -179,6 +190,20 @@ def compose_packet(project, cycle, config):
             f"工作 ID：{plan['id']}；状态：{plan['status']}"]
     else:
         lines += ['\n沿用项目已明确的目标；无需本人重新填写计划。执行范围以本次请求和既有授权为准。']
+    growth = cycle.get('growth', {})
+    if growth.get('mode') == 'enabled':
+        lines += ['\n## 成长协作状态', '采用不等于结果验证；以下候选不扩大授权，也不是已晋升的正式规则。']
+        for item in growth.get('tasks', []):
+            detail = item.get('growth') or {}
+            lines += [f"- {item['task_id']} / {item['task']}：复盘 {detail.get('review_state', 'unknown')}；"
+                f"采用 {item.get('adoption_state', 'unknown')}；实际结果 {item.get('outcome_state', 'unknown')}；"
+                f"协议判定 {item.get('protocol_verdict', 'unassessed')}"]
+            if detail.get('new_stop_rule'):
+                lines += [f"  待核对停止规则：{detail['new_stop_rule']}"]
+        for method in growth.get('methods', []):
+            lines += [f"- 待复验方法：{method['title']}；证据 {method.get('evidence_refs', [])}"]
+        if growth.get('error'):
+            lines += [f"成长记录未完成校验：{growth['error']}；保留历史，先修复来源。"]
     advice=cycle.get('suggestion',{})
     if advice:
         lines += [f"\n## 根据当前证据生成的下一步建议\n{advice['next_step']}",f"依据：{advice['basis']}\n判断理由：{advice['reason']}",
@@ -246,6 +271,7 @@ def enrich_work_cycle(snapshot, config, now=None):
             review = state['reviews'].get(d['id'], {})
             d.update(review_status=review.get('status', 'pending' if d['origin'] == '本人/接续 AI 登记' else 'candidate'),
                 feedback=review.get('feedback', ''), reviewed_at=review.get('at', ''),
+                growth_observation=copy.deepcopy(review.get('growth_observation', {})),
                 valid=all(file_is_current(f) for f in d['files']))
         accepted = sorted((r for r in state['reviews'].values() if r['status'] == 'accepted'), key=lambda r:r['at'])
         adopted = {}
@@ -275,6 +301,14 @@ def enrich_work_cycle(snapshot, config, now=None):
         for source in cycle['knowledge']:
             source['valid'] = file_info(source['path'])['signature'] == source['sha256']
         cycle['suggestion'] = propose(project,cycle,now)
+        growth = snapshot.get('growth', {})
+        page = project.get('project_page') or next((s['path'] for s in brief.get('sources', [])
+            if s.get('label', '').startswith('项目页')), '')
+        task_rows = [r for r in growth.get('tasks', []) if page and normalized_path(r.get('project_page', '')) == normalized_path(page)]
+        task_ids = {r['task_id'] for r in task_rows}
+        cycle['growth'] = dict(mode=growth.get('mode', 'legacy_unconfigured'), status=growth.get('status', 'disabled'),
+            tasks=list(reversed(task_rows[-8:])), methods=[m for m in growth.get('methods', []) if m['task_id'] in task_ids],
+            note=growth.get('note', ''), error=growth.get('error', ''))
         cycle['packet'] = compose_packet(project, cycle, config)
         project['work_cycle'] = cycle
         if brief:
@@ -340,9 +374,9 @@ def append_event(config, rows, key, project, action, data, now):
     event = dict(schema_version=1, event_id=event_id, task_id=data.get('plan_id') or event_id,
         project_key=key, project=dict(project=project.get('project'), path=project.get('path'), project_page=project.get('project_page', '')),
         previous_event=next((r['event_id'] for r in reversed(rows) if event_key(r) == key), ''),
-        action=action, data=data, timestamp=now.isoformat(timespec='seconds'), actor='本人/授权接续流程', evidence='工作台显式操作')
+        action=action, data=data, timestamp=now.isoformat(timespec='microseconds'), actor='本人/授权接续流程', evidence='工作台显式操作')
     event['record_hash'] = digest(event)
-    old = path.read_text(encoding='utf-8') if path.exists() else ''
+    old = path.read_bytes().decode('utf-8') if path.exists() else ''
     snapshot_file(path, 'Workbench', event['event_id'], path.parent / 'write-snapshots')
     staged = path.with_suffix('.pending')
     try:
@@ -473,6 +507,18 @@ def command(config, request, now=None):
             data=dict(delivery_id=delivery['id'], delivery=delivery, status=status,
                 purpose=text_value(incoming,'purpose',status=='accepted'), feedback=text_value(incoming,'feedback',status=='revise'), plan_id=delivery.get('plan_id',''))
             data['complete_plan'] = incoming.get('complete_plan') is True and status=='accepted'
+            observation = incoming.get('growth_observation', {})
+            if not isinstance(observation, dict):
+                raise ValueError('成长观察必须是对象。')
+            observation = {**delivery.get('growth_observation', {}), **observation}
+            outcome = observation.get('outcome_state', 'unknown')
+            verdict = observation.get('protocol_verdict', 'unassessed')
+            omission = observation.get('confirmed_omission', False)
+            if outcome not in ('unknown', 'pending', 'positive', 'neutral', 'negative', 'recovered', 'unattributed') or verdict not in ('unassessed', 'hit', 'miss', 'unnecessary') or type(omission) is not bool:
+                raise ValueError('成长观察状态无效；未保存决定。')
+            if omission and not data['feedback']:
+                raise ValueError('确认遗漏时请说明具体遗漏与影响。')
+            data['growth_observation'] = dict(outcome_state=outcome, protocol_verdict=verdict, confirmed_omission=omission)
             if status=='deferred':
                 until=date_value(incoming.get('until',''),True)
                 if until<=now.date().isoformat(): raise ValueError('暂缓验收日期应晚于今天。')
@@ -498,7 +544,13 @@ def command(config, request, now=None):
         else:
             raise ValueError('不支持的工作操作。')
         event=append_event(config,rows,key,project,action,data,now)
-        return dict(ok=True,event_id=event['event_id'])
+        result = dict(ok=True,event_id=event['event_id'])
+        if action == 'review':
+            try:
+                result['growth'] = growth_workspace(config).after_feedback(event)
+            except Exception as exc:
+                result['growth'] = dict(state='pending', error=str(exc), reason='验收决定已保存；成长记录待恢复。')
+        return result
     finally:
         lock.unlink()
 

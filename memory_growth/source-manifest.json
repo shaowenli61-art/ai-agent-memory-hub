@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "module": "memory_growth",
+  "files": {
+    "__init__.py": "0f3b0ef6483a9c11fefe53d6b62cec6beac415ace2d6d5a5d3260222958a4069",
+    "_admissions.py": "a1b4253240a765a8ad06220f109dce0a239ee6adbee3f68914ceba282082663f",
+    "_core.py": "7da3ca8c79fa21487016344a7e3a8220b0269b68d2f11cbe33f32cdf3e23e9bb",
+    "evaluation.py": "d0c10c1cfbcd1fe93c1fcab4dddf71adbb7cd0b5c3d447fdce6819cfecac8be2",
+    "receipts.py": "5f4e2d39d8e9d925707c1974f75045126777392d06632fa6a7098cf7bead0e1a",
+    "reporting.py": "28b2bcce440cada04977690c572ce81d6cd01183e8b25c9d06fb5ed21ead21a6",
+    "workspace.py": "bb662b15a4da8b62a2e719bdcdb92a77da4335fe3fc455a9eb39a3d733f304f0"
+  }
+}
